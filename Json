@@ -1,0 +1,163 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package freshworks;
+
+/**
+ *
+ * @author Admin
+ */
+import java.io.*;
+import java.util.*;
+
+
+public class FreshWorks {
+
+    static String mergeUtility(File filename,int count,String ans){ //program part to add all json from different files
+            
+            FileReader filereader = null;
+            String text = ""; // temporary variable to save the json string
+            try{
+                filereader = new FileReader(filename);
+                Scanner sc = new Scanner(filename);
+                
+                while(sc.hasNextLine())
+                {
+                    
+                    text = text + sc.nextLine();  
+                }
+               
+            }
+            catch(FileNotFoundException fileNotFound)
+            {
+                System.out.println("No Such File");
+            }
+            
+            if(text.equals(null) )
+            {
+                System.out.println("No data available");
+            }
+            
+            else
+            {
+                if(count == 0){  // if condition occurs it means the first file has arrived
+                    System.out.println(text);
+                    System.out.println(text.indexOf("{"));
+                    ans = ans + text.substring(0,text.length()-3);
+                }
+                else
+                {
+                    int temp = text.indexOf("[");
+                    ans = ans + text.substring(temp + 1,text.length()-3);
+                }
+            }
+            
+        return ans;// return the added json string
+    }
+    
+    static boolean check(String temporaryString,String filePrefix) //function to check the file aname and prefix given by user
+    {
+        boolean ret = true;
+        int j = 14;
+        if(temporaryString.length() <= filePrefix.length() )
+            return false;
+        for(int i = 0;i < filePrefix.length();i++)
+        {
+            if(temporaryString.charAt(j) != filePrefix.charAt(i))
+            {
+               
+                ret = false;
+                break;
+            }
+            else
+            { 
+                j++;
+                continue;
+            }
+                
+        }
+        return ret;
+    }
+    public static void main(String[] args) throws IOException{
+        // TODO code application logic here
+        
+        Scanner sc = new Scanner(System.in);
+        
+        String path = sc.nextLine();// path of files available
+        String filePrefix = sc.next(); // prefix of the files to be searched
+        
+        File dir = new File(path);
+        String ans = ""; // final output to be print at output file
+        
+        try{
+            File[] files = dir.listFiles(); // file array which has list of files at the provided directory
+            if(files.length < 1) // if number of files are zero this would happen
+            {
+                System.out.println("No folder available in that directory");
+            }
+           else
+            {
+                ArrayList<File> filePrefixArray = new ArrayList<File>(); // arraylist to save the files with provided prefix
+                for(int i = 0;i < files.length;i++)
+                {
+                    File filename = files[i];
+                   // System.out.println(filename.toString());
+                    String temporaryString = filename.toString();
+                    if(check(temporaryString,filePrefix)) // function would return true if both text file name and the prefix are equal
+                    {
+                        filePrefixArray.add(filename); // add the file to the arraylist filePrefixArray
+                    }
+                }
+                if(filePrefixArray.size() < 1)
+                {
+                    System.out.println("No files Named " + filePrefix +" are available");
+                }
+                else
+                {
+                    for(int i = 0;i < filePrefixArray.size();i++)
+                    {
+                        ans = mergeUtility(filePrefixArray.get(i),i,ans); // function to process the output 
+                        if(i <= filePrefixArray.size()){
+                            ans = ans + ",";
+                        }
+                    }
+                    ans = ans+ "] }";
+                }
+                
+              //upcoming lines would add the respected json strings from different files to the output file  
+                String newFileName = filePrefix+".txt";
+                FileWriter fw=new FileWriter(path + File.separator + newFileName); 
+                for (int i = 0; i < ans.length(); i++) 
+                {
+                    if(i > 0 && ans.charAt(i) == '[' || (ans.charAt(i) == ',' && ans.charAt(i - 1) == '}'))
+                    {
+                        
+                        fw.write(ans.charAt(i));
+                        fw.write(System.getProperty( "line.separator" )); //to provide next line
+                    }
+                    else if(i!= 0 && ans.charAt(i) == '{')
+                    {
+                        fw.write("    ");
+                        fw.write(ans.charAt(i));
+                    }
+                    else
+                    {
+                    fw.write(ans.charAt(i)); 
+                    }
+                }
+                System.out.println("done"); 
+                fw.close(); 
+                
+                
+            }
+        
+        }
+        catch(NullPointerException noSuchDirectory)
+        {
+            System.out.println("No such directory");
+        }
+    }
+    
+}
